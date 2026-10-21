@@ -1,0 +1,14 @@
+CREATE DATABASE tienda;
+GO
+USE tienda;
+GO
+
+CREATE TABLE productos (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    nombre NVARCHAR(100) NOT NULL,
+    precio DECIMAL(10,2) NOT NULL,
+    stock INT NOT NULL DEFAULT 0,
+    creado_en DATETIME2 DEFAULT SYSDATETIME()
+
+
+);
