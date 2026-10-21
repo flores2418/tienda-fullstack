@@ -1,7 +1,12 @@
-import { Router } from "express";
-import { listar } from "../controllers/product.controllers.js";
+import { Router } from 'express';
+import { listar, obtener, crear, actualizar, eliminar } from '../controllers/product.controllers.js';
 
 const router = Router();
 
 router.get('/', listar);
-export default router
+router.get('/:id', obtener);
+router.post('/', crear);
+router.put('/:id', actualizar);
+router.delete('/:id', eliminar);
+
+export default router;
