@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { pool } from './db/sqlserver.js'
 import productosRoutes from './routes/productos.routes.js';
+import { noEncontrado, errores } from './middlewares/errores.js';
 
 const app = express(); 
 app.use(cors());
@@ -12,6 +13,9 @@ app.get('/api/salud',(req,res)=> {
 const respuesta = {ok: true, mensaje: 'API funcionando'};
 res.json(respuesta);
 });
+
+app.use(noEncontrado);
+app.use(errores);
 
 const PORT = process.env.PORT;
 
