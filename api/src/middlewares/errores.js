@@ -8,11 +8,12 @@ export const errores = (err, req, res, next) => {
 
   const jsonMalEscrito = err.type === 'entity.parse.failed';
   const datoInvalido = err.number === 245 || err.number === 8114;
+  const validacionMongo = err.name === 'ValidationError' || err.name === 'CastError';
 
   // 2627 y 2601 = dato repetido en una columna UNIQUE
   const datoRepetido = err.number === 2627 || err.number === 2601;
 
-  if (jsonMalEscrito || datoInvalido) {
+  if (jsonMalEscrito || datoInvalido || validacionMongo) {
     return res.status(400).json({ mensaje: 'Datos inválidos' });
   }
 
