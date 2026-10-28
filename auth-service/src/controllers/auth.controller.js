@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { Usuario } from '../models/usuario.model.js';
+import { publicar } from '../rabbit.js';
 
 export const registro = async (req, res) => {
   const nombre = req.body.nombre;
@@ -17,6 +18,8 @@ export const registro = async (req, res) => {
   const usuario = await Usuario.create({ nombre, email, passwordHash });
 
   const usuarioCreado = { id: usuario.id, nombre: usuario.nombre, email: usuario.email };
+
+  publicar('usuario.registrado', usuarioCreado);
 
   res.status(201).json(usuarioCreado);
 };
