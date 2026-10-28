@@ -1,0 +1,73 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    ports: ["15672:15672"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  db-auth:
+    image: mongo:7
+    volumes:
+      - datos-auth:/data/db
+
+  db-productos:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SQL_PASSWORD}
+    volumes:
+      - datos-productos:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      retries: 15
+      start_period: 20s
+
+  auth-service:
+    build: ./auth-service
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      MONGO_URI: mongodb://db-auth:27017/auth
+      RABBIT_URL: amqp://rabbitmq
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      db-auth:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  productos-service:
+    build: ./productos-service
+    restart: unless-stopped
+    environment:
+      PORT: 3002
+      SQL_SERVER: db-productos
+      SQL_USER: sa
+      SQL_PASSWORD: ${SQL_PASSWORD}
+      RABBIT_URL: amqp://rabbitmq
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      db-productos:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  gateway:
+    build: ./gateway
+    restart: unless-stopped
+    ports: ["3000:3000"]
+    environment:
+      PORT: 3000
+      AUTH_URL: http://auth-service:3001
+      PRODUCTOS_URL: http://productos-service:3002
+    depends_on:
+      - auth-service
+      - productos-service
+
+volumes:
+  datos-auth:
+  datos-productos:
