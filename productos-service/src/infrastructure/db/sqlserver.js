@@ -1,4 +1,5 @@
 import sql from 'mssql';
+import { reintentar } from '../mensajeria/reintentar.js';
 
 const configuracion = {
   server: process.env.SQL_SERVER,
@@ -24,7 +25,9 @@ const crearTabla = `
 `;
 
 export const iniciarDb = async () => {
-  const master = await new sql.ConnectionPool(configuracion).connect();
+  const master = await reintentar('SQL Server', () => {
+    return new sql.ConnectionPool(configuracion).connect();
+  });
 
   await master.query("IF DB_ID('productos_db') IS NULL CREATE DATABASE productos_db");
   await master.close();
